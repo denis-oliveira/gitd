@@ -1,0 +1,40 @@
+#!/bin/bash
+
+gitd_add() {
+        TMP_FILE=$( mktemp )
+
+	eval $(resize)
+        dialog --title "gitd" --ok-label "Add" --checklist "Select the files" $(( $LINES / 2 )) $(( $COLUMNS / 2 )) $(( $LINES / 2 - 5 )) $(git status | awk '/modified/{print $2" MODIFIED ON"}') 2> $TMP_FILE
+        if [[ $? -eq 0 ]]
+        then
+		eval $(resize)
+		dialog --title "gitd" --yesno "Did you confirm the add?" $(( $LINES / 2 ))  $(( $COLUMNS / 2 ))
+		if [[ $? -eq 0 ]]
+		then
+			git add $( cat $TMP_FILE )
+		fi
+        fi
+        rm $TMP_FILE
+	dialog --clear
+}
+
+case "$1" in
+	"a" | "add" )
+		if [[ -d ".git" ]]
+		then
+			gitd_add
+		else
+			echo "Not a git repository does exists"
+			exit 1
+		fi
+	;;
+	*)
+cat <<EOF
+		===== gitd =====
+	The git dialog
+	Commands:
+	"a" | "add" ) Execute the git add 
+EOF
+
+	;;
+esac
